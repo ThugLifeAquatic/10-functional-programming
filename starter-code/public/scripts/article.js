@@ -47,7 +47,7 @@ Article.loadAll = rows => {
   Article.all.push(new Article(ele));
 });
 */
-  Article.all = rawData.map(new Article);
+  Article.all = rows.map(ele => new Article(ele));
 };
 
 Article.fetchAll = callback => {
@@ -82,7 +82,10 @@ Article.numWordsByAuthor = () => {
     // The first property should be pretty straightforward, but you will need to chain
     // some combination of filter, map, and/or reduce to get the value for the second
     // property.
-
+    return {
+      name: author,
+      words: Article.all.filter(article => article.author === author).map(article => article.body.split(' ').length).reduce((sum, value) => sum + value)
+    }
   })
 };
 
