@@ -27,7 +27,7 @@ Article.all = [];
 Article.prototype.toHtml = function() {
   var template = Handlebars.compile($('#article-template').text());
 
-  this.daysAgo = parseInt((new Date() - new Date(this.publishedOn))/60/60/24/1000);
+  this.daysAgo = parseInt((new Date() - new Date(this.publishedOn)) / 60 / 60 / 24 / 1000);
   this.publishStatus = this.publishedOn ? `published ${this.daysAgo} days ago` : '(draft)';
   this.body = marked(this.body);
 
@@ -35,7 +35,7 @@ Article.prototype.toHtml = function() {
 };
 
 Article.loadAll = rows => {
-  rows.sort((a,b) => (new Date(b.publishedOn)) - (new Date(a.publishedOn)));
+  rows.sort((a, b) => (new Date(b.publishedOn)) - (new Date(a.publishedOn)));
 
   // TODO: Refactor this forEach code, by using a `.map` call instead, since what we are trying to accomplish
   // is the transformation of one collection into another. Remember that we can set variables equal to the result
@@ -47,28 +47,30 @@ Article.loadAll = rows => {
   Article.all.push(new Article(ele));
 });
 */
-
+  Article.all = rawData.map(new Article);
 };
 
 Article.fetchAll = callback => {
   $.get('/articles')
-  .then(
-    results => {
-      Article.loadAll(results);
-      callback();
-    }
-  )
+    .then(
+      results => {
+        Article.loadAll(results);
+        callback();
+      }
+    )
 };
 
 // TODO: Chain together a `map` and a `reduce` call to get a rough count of all words in all articles.
 Article.numWordsAll = () => {
-  return Article.all.map().reduce()
+  return Article.all.map(Article.body.split(' ').length).reduce((sum, value) => {
+    return sum + value;
+  }, 0);
 };
 
 // TODO: Chain together a `map` and a `reduce` call to produce an array of unique author names. You will
 // probably need to use the optional accumulator argument in your reduce call.
 Article.allAuthors = () => {
-  return Article.all.map().reduce();
+  return Article.all.map(ele =>{return ele.author}).reduce((a,b) => {if(!a.includes(b)){a.push(b)} return}, []);
 };
 
 Article.numWordsByAuthor = () => {
@@ -86,45 +88,52 @@ Article.numWordsByAuthor = () => {
 
 Article.truncateTable = callback => {
   $.ajax({
-    url: '/articles',
-    method: 'DELETE',
-  })
-  .then(console.log) // REVIEW: Check out this clean syntax for just passing 'assumed' data into a named function!
-                     // The reason we can do this has to do with the way Promise.prototype.then works. It's a little
-                     // outside the scope of 301 material, but feel free to research!
-  .then(callback);
+      url: '/articles',
+      method: 'DELETE',
+    })
+    .then(console.log) // REVIEW: Check out this clean syntax for just passing 'assumed' data into a named function!
+    // The reason we can do this has to do with the way Promise.prototype.then works. It's a little
+    // outside the scope of 301 material, but feel free to research!
+    .then(callback);
 };
 
 Article.prototype.insertRecord = function(callback) {
   // REVIEW: Why can't we use an arrow function here for .insertRecord()??
-  $.post('/articles', {author: this.author, authorUrl: this.authorUrl, body: this.body, category: this.category, publishedOn: this.publishedOn, title: this.title})
-  .then(console.log)
-  .then(callback);
-};
-
-Article.prototype.deleteRecord = function(callback) {
-  $.ajax({
-    url: `/articles/${this.article_id}`,
-    method: 'DELETE'
-  })
-  .then(console.log)
-  .then(callback);
-};
-
-Article.prototype.updateRecord = function(callback) {
-  $.ajax({
-    url: `/articles/${this.article_id}`,
-    method: 'PUT',
-    data: {
+  $.post('/articles', {
       author: this.author,
       authorUrl: this.authorUrl,
       body: this.body,
       category: this.category,
       publishedOn: this.publishedOn,
-      title: this.title,
-      author_id: this.author_id
-    }
-  })
-  .then(console.log)
-  .then(callback);
+      title: this.title
+    })
+    .then(console.log)
+    .then(callback);
+};
+
+Article.prototype.deleteRecord = function(callback) {
+  $.ajax({
+      url: `/articles/${this.article_id}`,
+      method: 'DELETE'
+    })
+    .then(console.log)
+    .then(callback);
+};
+
+Article.prototype.updateRecord = function(callback) {
+  $.ajax({
+      url: `/articles/${this.article_id}`,
+      method: 'PUT',
+      data: {
+        author: this.author,
+        authorUrl: this.authorUrl,
+        body: this.body,
+        category: this.category,
+        publishedOn: this.publishedOn,
+        title: this.title,
+        author_id: this.author_id
+      }
+    })
+    .then(console.log)
+    .then(callback);
 };
